@@ -92,7 +92,7 @@ async function api(path, { method = 'GET', body } = {}) {
 export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState('home'); // 'home' | 'ask' | 'seniors' | 'mentorship' | 'messages' | 'profile'
-  
+
   // App Live States
   const [questions, setQuestions] = useState([]);
   const [seniors, setSeniors] = useState([]);
@@ -102,7 +102,7 @@ export default function App() {
   const [notifications, setNotifications] = useState([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationsRef = useRef(null);
-  
+
   // Authentication State
   const [currentUser, setCurrentUser] = useState({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -137,14 +137,14 @@ export default function App() {
   const [selectedVenueSession, setSelectedVenueSession] = useState(null);
   const [mentorshipTargetSenior, setMentorshipTargetSenior] = useState(null);
   const [activeQuestionThread, setActiveQuestionThread] = useState(null);
-  
+
   // Forms States
   const [newDoubtTitle, setNewDoubtTitle] = useState('');
   const [newDoubtDesc, setNewDoubtDesc] = useState('');
   const [newDoubtSubject, setNewDoubtSubject] = useState('');
   const [newDoubtBranch, setNewDoubtBranch] = useState('ENC');
   const [isAnonymousDoubt, setIsAnonymousDoubt] = useState(true);
-  
+
   // Mentorship Form
   const [mentorshipTopic, setMentorshipTopic] = useState('Resume & Portfolio Review');
   const [mentorshipSlot, setMentorshipSlot] = useState('Tomorrow 5:00 PM @ Library');
@@ -156,7 +156,7 @@ export default function App() {
   const [slotCourseFilter, setSlotCourseFilter] = useState('All');
   const [hideClaimedSlots, setHideClaimedSlots] = useState(true);
   const [mentorshipHubTab, setMentorshipHubTab] = useState('claimable'); // 'claimable' | 'junior_board' | 'my_sessions'
-  
+
   // Offer 1:1 Session Modal State (Triggered from Doubts Board)
   const [isOfferSessionModalOpen, setIsOfferSessionModalOpen] = useState(false);
   const [targetQuestionForOffer, setTargetQuestionForOffer] = useState(null);
@@ -920,7 +920,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col md:flex-row antialiased selection:bg-red-100 selection:text-red-950 font-sans">
-      
+
       {/* Toast Alert */}
       {toast && (
         <div className="fixed top-5 right-5 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-amber-400/30 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -2072,7 +2072,7 @@ export default function App() {
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Thapar Institute Academic & Mentorship Network</span>
             </div>
-            
+
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
               Connect with TIET Seniors. <br className="hidden sm:inline" />
               <span className="text-amber-300">Ask Doubts. Conquer ESTs.</span>
@@ -2230,7 +2230,7 @@ export default function App() {
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Senior Endorsed
                         </span>
                       </div>
-                      
+
                       <h4
                         onClick={() => {
                           setActiveQuestionThread(q);
@@ -2920,7 +2920,7 @@ export default function App() {
         {mentorshipHubTab === 'claimable' && (
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-              {/* Course Tagging Filter Chips (Requirement 4) */}
+              {/* Course Tagging Filter Chips */}
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
                   <Filter className="w-3.5 h-3.5" />
@@ -3029,7 +3029,7 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Course Code Tag (Requirement 4) */}
+                        {/* Course Code Tag */}
                         <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-red-50 text-red-950 border border-red-200 shrink-0">
                           {slot.courseCode}
                         </span>
@@ -3041,7 +3041,7 @@ export default function App() {
                         <p className="text-xs text-slate-500 mt-0.5">{slot.courseName}</p>
                       </div>
 
-                      {/* Meeting Type & Venue Details (Requirement 3) */}
+                      {/* Meeting Type & Venue Details */}
                       <div className="mt-3.5 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1.5 font-bold text-slate-800">
@@ -3109,7 +3109,7 @@ export default function App() {
         )}
 
         {/* ==================================================== */}
-        {/* SUB-TAB 2: JUNIOR HELP REQUESTS BOARD (Requirement 5) */}
+        {/* SUB-TAB 2: JUNIOR HELP REQUESTS BOARD */}
         {/* ==================================================== */}
         {mentorshipHubTab === 'junior_board' && (
           <div className="space-y-6">
@@ -3173,7 +3173,7 @@ export default function App() {
                           {req.subject}
                         </span>
 
-                        {/* Instant Status Tag (Requirement 5) */}
+                        {/* Instant Status Tag */}
                         {req.status === 'Open' ? (
                           <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 animate-pulse">
                             <Clock className="w-3 h-3 text-amber-700" />
@@ -3506,7 +3506,7 @@ export default function App() {
   function renderStudentProfile() {
     return (
       <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-300">
-        
+
         {/* Header with Title and Sign In / Sign Out actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -3838,7 +3838,7 @@ export default function App() {
                   <p className="text-xs md:text-sm text-slate-600 mt-1">
                     {currentUser.year} • {currentUser.branch} • {currentUser.batch}
                   </p>
-                  
+
                   <div className="flex flex-wrap items-center gap-3 mt-3 text-xs">
                     <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
                       Current CGPA: {currentUser.cgpa || 'Not added'}

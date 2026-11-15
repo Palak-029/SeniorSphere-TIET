@@ -1,52 +1,32 @@
-# SeniorSphere — TIET
+# SeniorSphere
 
-A student mentorship platform built with React and a C++17 backend for an Object-Oriented Programming project.
+A platform for TIET students to ask doubts, connect with seniors and book mentorship sessions. Built as a C++ OOP project with a React frontend.
 
-**Live website:** https://seniorsphere-tiet.vercel.app  
-**Backend health:** https://seniorsphere-backend-production.up.railway.app/api/health
+[Live website](https://seniorsphere-tiet.vercel.app)
 
 ## Features
 
-- College-email signup, login and editable profiles
-- Senior discovery and connections
-- Private one-to-one chat with unread counts
-- Doubt forum, anonymous questions, answers and question upvotes
+- Signup and login with a college email address
+- Student profiles and senior directory
+- Private chat with unread message counts
+- Doubt forum with anonymous posts, answers and question upvotes
 - Mentorship slots, help requests and bookings
-- Notifications and persistent JSON-file storage
+- Notifications
 
-## Technology
+## Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, Vite, Tailwind CSS |
-| Backend | C++17 and cpp-httplib |
-| JSON | nlohmann/json, behind a small application interface |
-| Passwords | libsodium Argon2id |
-| Storage | JSON file on a persistent Railway volume |
-| Hosting | Vercel frontend; Railway backend |
+React, Vite and Tailwind CSS for the frontend. C++17 for the backend, with cpp-httplib for HTTP, nlohmann/json for JSON handling and libsodium for password hashing. Data is saved in a JSON file. The frontend runs on Vercel and the backend on Railway.
 
-## How the backend works
+## Running locally
 
-React sends an HTTP request. A controller checks login and input, updates model objects through a repository, saves the database, and returns JSON. Chat updates are fetched every three seconds.
-
-`React → Controller → Model / Repository → Database → JSON response`
-
-The feature code uses classes, encapsulation, inheritance, abstract interfaces, polymorphism, templates, exceptions and STL containers. See [the explanation guide](docs/BACKEND_GUIDE.md) for examples and a reading order.
-
-## Run locally
-
-### Frontend
-
-Install Node.js 24 and run from the repository root:
+Install Node.js 24, then run from the project root:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Vite forwards `/api` requests to `http://localhost:8080`. To use a different server, copy `.env.example` to `.env` and set `VITE_API_URL`.
-
-### Backend on Debian / Ubuntu
+To build the backend on Debian/Ubuntu:
 
 ```sh
 sudo apt-get install g++ cmake make libsodium-dev
@@ -56,18 +36,17 @@ cmake --build build -j2
 ./build/seniorsphere
 ```
 
-On Windows, install a C++17 compiler, CMake and libsodium development files, then run `backend/build.bat`. Configure CMake's include/library paths if libsodium is outside the compiler's search path.
+On Windows, use CMake, a C++17 compiler and libsodium development files, then run `backend/build.bat`. Set the include/library paths in CMake if libsodium is installed outside the compiler's search path.
 
-The backend starts with an empty database. This public repository contains no student accounts, passwords or saved messages. Its seed file is intentionally empty.
+The backend runs on port 8080. Vite forwards `/api` requests to it. To use another backend, copy `.env.example` to `.env` and change `VITE_API_URL`.
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `PORT` | `8080` | HTTP server port |
-| `DATA_DIR` | `data` | Directory containing `db.json` |
-| `CORS_ORIGIN` | Local Vite origins | Allowed frontend origins, comma-separated |
-| `SEED_DEMO` | Disabled | Loads the seed only on first start when set to `1` |
+Backend settings are listed in `backend/.env.example`. Set `DATA_DIR` to choose where `db.json` is stored and `CORS_ORIGIN` to allow your frontend's origin. Keep the data directory outside cloud-synced folders. The included seed file is empty.
 
-Use a data directory outside OneDrive or other synchronized folders to avoid file-replacement conflicts.
+## Backend structure
+
+Controllers handle requests and validation. Models represent users, questions, conversations and bookings. `Repository<T>` stores these objects, and `Database` loads and saves them.
+
+`Entity` and `Controller` provide abstract interfaces. Their derived classes demonstrate inheritance and polymorphism; repositories demonstrate templates. Private identity and password fields in `User` demonstrate encapsulation. Chat is refreshed by polling every three seconds.
 
 ## Tests
 
@@ -75,20 +54,18 @@ Use a data directory outside OneDrive or other synchronized folders to avoid fil
 python backend/tests/regression.py backend/build/seniorsphere
 ```
 
-On Windows, pass the built `.exe` path. The test suite uses an isolated temporary database and does not touch application data. It checks authentication, privacy, profile validation, storage failure handling, chat, concurrent slot claims, CORS and restart persistence. The 40-check suite passed during deployment preparation.
+On Windows, use the built executable's path. Tests use a separate temporary database and cover authentication, privacy, chat, slot claims and persistence.
 
-## Deployment
+## Hosting
 
-**Vercel:** repository root, Vite framework, `npm ci`, `npm run build`, output `dist`. Set `VITE_API_URL` to the backend HTTPS URL before building.
+Vercel builds the frontend using `npm run build` and serves `dist`. Set `VITE_API_URL` to the backend's HTTPS URL before deployment.
 
-**Railway:** use `backend` as the service root and `Dockerfile` as the build source. Attach a persistent volume at `/data`, use one replica, and configure `PORT=8080`, `DATA_DIR=/data`, `SEED_DEMO=0`, and `CORS_ORIGIN` to the exact production frontend origin. Set `/api/health` as the health check. Configure these settings in Railway; this repository intentionally omits the deprecated `railway.json` format.
+On Railway, select `backend` as the root directory and use its Dockerfile. Attach a persistent volume at `/data`, use one replica, and set `PORT=8080`, `DATA_DIR=/data`, `SEED_DEMO=0` and `CORS_ORIGIN` to the frontend origin. The health endpoint is `/api/health`. Configure these settings in Railway rather than using the deprecated `railway.json` format.
 
-The public repository is a source copy. Pushing to it does not automatically update the currently hosted services until Git deployment integration is connected.
+## Limitations
 
-## Project limitations
+Email ownership and academic year are not verified. Sessions expire after 24 hours and are cleared on restart. JSON-file storage is intended for a small, single-server project. Bookings are marked confirmed immediately; cancellation, answer acceptance, password reset and moderation are not implemented.
 
-This is an educational project. Email ownership and academic year are not verified. Sessions expire after 24 hours and are cleared when the server restarts. Whole-file JSON storage is intended for small datasets and one server process. There is no password-reset or moderation workflow. Bookings are immediately marked confirmed; cancellation, answer acceptance and answer voting are not implemented. The website runs on hosting-plan allowances, including Railway trial credit.
+## Libraries
 
-## Third-party libraries
-
-cpp-httplib and nlohmann/json are vendored under `backend/third_party`, alongside their licenses. libsodium is installed as a system dependency; its license is also included there. Library implementation code is not original project code.
+cpp-httplib and nlohmann/json are included under `backend/third_party`. Their licenses and the libsodium license are included there.
