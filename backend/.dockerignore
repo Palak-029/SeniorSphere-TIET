@@ -1,0 +1,6 @@
+build
+data
+tests
+*.exe
+*.dll
+*.log
