@@ -32,6 +32,11 @@ bool Database::readFile(const std::string& path, Json& out) const {
 }
 
 void Database::loadFrom(const Json& data) {
+    sessions.clear();
+    for (const auto& item : data["sessions"].items()) {
+        if (item["expiresAt"].asInt() > utils::now())
+            sessions[item["tokenHash"].asString()] = {static_cast<int>(item["userId"].asInt()), item["expiresAt"].asInt()};
+    }
     users.fromJson(data["users"]);
     questions.fromJson(data["questions"]);
     conversations.fromJson(data["conversations"]);
@@ -81,6 +86,15 @@ void Database::load() {
 
 void Database::save() const {
     Json data = Json::object();
+    data["sessions"] = Json::array();
+    for (const auto& entry : sessions) {
+        if (entry.second.expiresAt <= utils::now()) continue;
+        Json item = Json::object();
+        item["tokenHash"] = entry.first;
+        item["userId"] = entry.second.userId;
+        item["expiresAt"] = entry.second.expiresAt;
+        data["sessions"].push(item);
+    }
     data["users"] = users.toJson();
     data["questions"] = questions.toJson();
     data["conversations"] = conversations.toJson();

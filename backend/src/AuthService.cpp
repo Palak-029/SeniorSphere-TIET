@@ -96,18 +96,20 @@ Session AuthService::login(const std::string& rawEmail, const std::string& passw
 }
 
 void AuthService::logout(const std::string& token) {
-    sessions_.erase(token);
+    db_.sessions.erase(utils::sha256Hex(token));
+    db_.save();
 }
 
 Session AuthService::createSession(User& user) {
     Session session;
     session.token = utils::randomHex(32);
     session.user = &user;
-    for (auto it = sessions_.begin(); it != sessions_.end();) {
-        if (it->second.expiresAt <= utils::now()) it = sessions_.erase(it); else ++it;
+    for (auto it = db_.sessions.begin(); it != db_.sessions.end();) {
+        if (it->second.expiresAt <= utils::now()) it = db_.sessions.erase(it); else ++it;
     }
-    sessions_[session.token] = {user.id(), utils::now() + 24 * 60 * 60};
+    db_.sessions[utils::sha256Hex(session.token)] = {user.id(), utils::now() + 24 * 60 * 60};
     user.lastSeen = utils::now();
+    db_.save();
     return session;
 }
 
@@ -130,9 +132,9 @@ std::string AuthService::clientIp(const HttpRequest& request) {
 }
 
 User* AuthService::userFromRequest(const HttpRequest& request) {
-    auto it = sessions_.find(tokenFromRequest(request));
-    if (it == sessions_.end()) return nullptr;
-    if (it->second.expiresAt <= utils::now()) { sessions_.erase(it); return nullptr; }
+    auto it = db_.sessions.find(utils::sha256Hex(tokenFromRequest(request)));
+    if (it == db_.sessions.end()) return nullptr;
+    if (it->second.expiresAt <= utils::now()) { db_.sessions.erase(it); return nullptr; }
     User* user = db_.users.find(it->second.userId);
     if (user) user->lastSeen = utils::now();
     return user;

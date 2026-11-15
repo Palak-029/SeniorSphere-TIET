@@ -64,7 +64,7 @@ On Railway, select `backend` as the root directory and use its Dockerfile. Attac
 
 ## Limitations
 
-Email ownership and academic year are not verified. Sessions expire after 24 hours and are cleared on restart. JSON-file storage is intended for a small, single-server project. Bookings are marked confirmed immediately; cancellation, answer acceptance, password reset and moderation are not implemented.
+Email ownership and academic year are not verified. Sessions expire after 24 hours and survive server restarts. Logout invalidates the saved session. JSON-file storage is intended for a small, single-server project. Bookings are marked confirmed immediately; cancellation, answer acceptance, password reset and moderation are not implemented.
 
 ## Libraries
 

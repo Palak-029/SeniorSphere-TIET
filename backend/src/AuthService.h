@@ -51,8 +51,6 @@ public:
 private:
     Database& db_;
     LoginLimiter limiter_;
-    struct StoredSession { int userId; long long expiresAt; };
-    std::map<std::string, StoredSession> sessions_;
 
     Session createSession(User& user);
 };

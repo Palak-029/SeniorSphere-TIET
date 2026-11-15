@@ -84,12 +84,16 @@ with tempfile.TemporaryDirectory(prefix='ss-test-',dir=root) as directory:
         slow=socket.create_connection(('127.0.0.1',port)); slow.sendall(b'GET /api/health HTTP/1.1\r\nHost: localhost\r\n')
         t=time.monotonic(); check(call('GET','/api/health')[0]==200 and time.monotonic()-t<2,'slow socket does not block another request'); slow.close()
         process.terminate(); process.wait(timeout=10); process=start()
-        check(call('GET','/api/me',token=token)[0]==401,'restart clears in-memory sessions')
+        check(call('GET','/api/me',token=token)[0]==200,'restart preserves valid session')
+        check(any(item['id']==q['id'] and item['isMine'] for item in call('GET','/api/questions',token=token)[1]),'doubt and ownership persist after restart')
+        check(all(item['tokenHash']!=token for item in json.loads((data/'db.json').read_text())['sessions']),'stored sessions do not expose bearer tokens')
         _,session=call('POST','/api/auth/login',{'email':'review0@thapar.edu','password':'testpassword'})
         token=session['token']
         check(session['user']['name']=='Valid Name','profile persists after restart')
         check(call('GET','/api/conversations',token=token)[1][0]['messages'][0]['text']=='Private hello','message persists after restart')
         check(call('POST','/api/auth/logout',{},token)[0]==200 and call('GET','/api/me',token=token)[0]==401,'logout invalidates token')
+        process.terminate(); process.wait(timeout=10); process=start()
+        check(call('GET','/api/me',token=token)[0]==401,'logout stays invalid after restart')
         print(f'{checks} checks passed',flush=True)
     finally:
         process.terminate(); process.wait(timeout=10); log.close()

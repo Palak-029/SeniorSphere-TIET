@@ -65,7 +65,6 @@ const TIET_BRANCHES = [
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const TOKEN_KEY = 'seniorsphere_token';
-const DEMO_PASSWORD = 'password123';
 
 async function api(path, { method = 'GET', body } = {}) {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -106,6 +105,8 @@ export default function App() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [authMode, setAuthMode] = useState('signin'); // 'profile' | 'signin' | 'signup'
 
   // Sign Up Form States
@@ -120,8 +121,8 @@ export default function App() {
   const [signUpEmailError, setSignUpEmailError] = useState('');
 
   // Sign In Form States
-  const [signInEmail, setSignInEmail] = useState('srishti@thapar.edu');
-  const [signInPassword, setSignInPassword] = useState('password123');
+  const [signInEmail, setSignInEmail] = useState('');
+  const [signInPassword, setSignInPassword] = useState('');
   const [signInEmailError, setSignInEmailError] = useState('');
 
   // Interactive UI Filters & Search
@@ -218,16 +219,12 @@ export default function App() {
   // ---------- Loading data from the backend ----------
 
   const loadPublicData = async () => {
-    const [qs, people, slots, requests] = await Promise.all([
-      api('/api/questions'),
-      api('/api/seniors'),
-      api('/api/slots'),
-      api('/api/help-requests')
+    await Promise.all([
+      api('/api/questions').then(setQuestions),
+      api('/api/seniors').then(setSeniors),
+      api('/api/slots').then(setOpenSlots),
+      api('/api/help-requests').then(setJuniorHelpRequests)
     ]);
-    setQuestions(qs);
-    setSeniors(people);
-    setOpenSlots(slots);
-    setJuniorHelpRequests(requests);
   };
 
   const loadPrivateData = async () => {
@@ -253,12 +250,27 @@ export default function App() {
   };
 
   const refreshData = async () => {
+    setIsLoading(true);
+    setLoadError('');
     try {
+      if (localStorage.getItem(TOKEN_KEY)) {
+        try {
+          const user = await api('/api/me');
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+          setAuthMode('profile');
+        } catch (err) {
+          if (err.status === 401) clearSession();
+          else throw err;
+        }
+      }
       await loadPublicData();
       if (localStorage.getItem(TOKEN_KEY)) await loadPrivateData();
     } catch (err) {
       if (err.status === 401) clearSession();
-      else showToast(err.message, 'error');
+      else setLoadError('Could not load your saved data. Check your connection and try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -277,6 +289,10 @@ export default function App() {
 
   const requireLogin = () => {
     if (isAuthenticated) return true;
+    if (isLoading || localStorage.getItem(TOKEN_KEY)) {
+      showToast('Please wait while your account reconnects, or use Retry.', 'error');
+      return false;
+    }
     showToast('Please sign in with your Thapar account first.', 'error');
     setAuthMode('signin');
     setActiveTab('profile');
@@ -290,18 +306,6 @@ export default function App() {
     setAuthMode('profile');
     await refreshData();
   };
-
-  // Restore the session saved in this browser.
-  useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) return;
-    api('/api/me')
-      .then(user => {
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        setAuthMode('profile');
-      })
-      .catch(() => clearSession());
-  }, []);
 
   // Poll for new chat messages and notifications from other students.
   useEffect(() => {
@@ -920,6 +924,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col md:flex-row antialiased selection:bg-red-100 selection:text-red-950 font-sans">
+      {(isLoading || loadError) && (
+        <div role="status" className="fixed top-0 inset-x-0 z-[100] bg-amber-50 border-b border-amber-200 p-3 text-center text-sm text-slate-800">
+          {loadError || 'Loading your saved account and doubts…'}
+          {loadError && <button type="button" onClick={refreshData} className="ml-3 font-bold underline">Retry</button>}
+        </div>
+      )}
 
       {/* Toast Alert */}
       {toast && (
@@ -3589,7 +3599,7 @@ export default function App() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Srishti"
+                      placeholder="Your full name"
                       value={signUpName}
                       onChange={(e) => handleSignUpNameChange(e.target.value)}
                       className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
@@ -3641,7 +3651,7 @@ export default function App() {
                     <input
                       type="email"
                       required
-                      placeholder="e.g. srishti@thapar.edu"
+                      placeholder="yourname@thapar.edu"
                       value={signUpEmail}
                       onChange={(e) => handleSignUpEmailChange(e.target.value)}
                       className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
@@ -3748,7 +3758,7 @@ export default function App() {
                       <input
                         type="email"
                         required
-                        placeholder="e.g. srishti@thapar.edu"
+                        placeholder="yourname@thapar.edu"
                         value={signInEmail}
                         onChange={(e) => handleSignInEmailChange(e.target.value)}
                         className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
@@ -3789,30 +3799,7 @@ export default function App() {
                   </button>
                 </form>
 
-                {/* Quick One-Click Demo Logins */}
-                <div className="pt-4 border-t border-slate-100">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                    Or Quick Demo Sign-In (Test Different Academic Years):
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {[
-                      { name: 'Srishti', yr: '2nd Year', branch: 'ENC', email: 'srishti@thapar.edu' },
-                      { name: 'Aarav Gupta', yr: '1st Year', branch: 'COE', email: 'aarav.g@thapar.edu' },
-                      { name: 'Kavya Singla', yr: '3rd Year', branch: 'ECE', email: 'kavya.s@thapar.edu' },
-                      { name: 'Priya Sharma', yr: '4th Year', branch: 'COE', email: 'priya.sharma@thapar.edu' }
-                    ].map(demo => (
-                      <button
-                        key={demo.name}
-                        type="button"
-                        onClick={() => signIn(demo.email, DEMO_PASSWORD)}
-                        className="p-2.5 text-left rounded-xl bg-slate-50 hover:bg-red-50/70 border border-slate-200/80 transition-all cursor-pointer"
-                      >
-                        <p className="text-xs font-bold text-slate-800">{demo.name}</p>
-                        <p className="text-[11px] text-red-900 font-semibold">{demo.yr} • {demo.branch}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
               </div>
             )}
           </div>
